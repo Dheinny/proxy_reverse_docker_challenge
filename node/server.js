@@ -18,7 +18,7 @@ app.get('/', (req, res) =>{
     sql = `INSERT INTO people(name) values ('`+name[parseInt(Math.random()*10)]+` `+lasname[parseInt(Math.random()*10)]+`')`
     connection.query(sql)
     
-    rp = response_req(connection, res)
+    response_req(connection, res)
     connection.end
 })
 
