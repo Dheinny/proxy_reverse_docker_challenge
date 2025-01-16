@@ -1,0 +1,45 @@
+services:
+
+  app:
+    build:
+      context: node
+    image: dheinny/challenge_node:prod
+    container_name: node_ch
+    tty: true
+    ports:
+      - "3000:3000"
+    networks:
+      - challenge_proxy
+    depends_on:
+      - db
+
+  reverse_proxy:
+    build:
+      context: nginx
+    image: dheinny/challenge_nginx:prod
+    container_name: nginx_ch
+    ports:
+      - "8080:80"
+    networks:
+      - challenge_proxy
+    depends_on:
+      - app
+
+  db:
+    build:
+      context: mysql
+    image: dheinny/challenge_mysql:prod
+    command: --innodb-use-native-aio=0
+    container_name: mysql_ch
+    restart: always
+    volumes: 
+       - ./mysql/dbs:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=proxy_ch_db
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - challenge_proxy
+
+networks:
+  challenge_proxy:
+    driver: bridge
