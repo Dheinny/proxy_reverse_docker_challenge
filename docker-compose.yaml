@@ -6,12 +6,16 @@ services:
     image: dheinny/challenge_node:prod
     container_name: node_ch
     tty: true
+    volumes:
+      - ./node:/usr/src/app       #bind mount local and container dirs.
+      - /usr/src/app/node_modules #anonymous volume. Not override the directory.
     ports:
       - "3000:3000"
     networks:
       - challenge_proxy
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   reverse_proxy:
     build:
@@ -33,13 +37,21 @@ services:
     container_name: mysql_ch
     restart: always
     volumes: 
-       - ./mysql/dbs:/var/lib/mysql
+      - mysqlvol:/var/lib/mysql   #mount a volume to persist db data.
     environment:
       - MYSQL_DATABASE=proxy_ch_db
       - MYSQL_ROOT_PASSWORD=root
     networks:
       - challenge_proxy
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 networks:
   challenge_proxy:
     driver: bridge
+
+volumes:
+  mysqlvol:
